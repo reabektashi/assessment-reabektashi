@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
+import videoRoutes from "./routes/video.routes.js";
 dotenv.config();
 
 const app = express();
@@ -13,6 +14,9 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({ message: "Video Lab API running " });
 });
+
+app.use("/videos", videoRoutes);
+app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRoutes);
 app.use(errorHandler);
 
