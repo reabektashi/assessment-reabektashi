@@ -1,14 +1,62 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  password    String
+  role        Role         @default(USER)
+  videos      Video[]
+  bookmarks   Bookmark[]
+  annotations Annotation[]
+  createdAt   DateTime     @default(now())
+}
+
+model Video {
+  id           Int          @id @default(autoincrement())
+  title        String
+  filePath     String
+  uploadedById Int
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  bookmarks    Bookmark[]
+  annotations  Annotation[]
+  createdAt    DateTime     @default(now())
+}
+
+model Bookmark {
+  id          Int      @id @default(autoincrement())
+  videoId     Int
+  video       Video    @relation(fields: [videoId], references: [id])
+  title       String
+  timestamp   Float
+  createdById Int
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([videoId])
+}
+
+model Annotation {
+  id          Int      @id @default(autoincrement())
+  videoId     Int
+  video       Video    @relation(fields: [videoId], references: [id])
+  timestamp   Float
+  description String
+  dataJson    Json
+  createdById Int
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([videoId])
 }
