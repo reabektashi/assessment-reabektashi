@@ -5,6 +5,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.routes.js";
 import videoRoutes from "./routes/video.routes.js";
 import bookmarkRoutes from "./routes/bookmark.routes.js";
+import annotationRoutes from "./routes/annotation.routes.js";
 dotenv.config();
 
 const app = express();
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
 app.use("/videos", videoRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use(bookmarkRoutes);
+app.use(annotationRoutes);
 app.use("/auth", authRoutes);
 app.use(errorHandler);
 
