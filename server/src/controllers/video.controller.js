@@ -32,9 +32,17 @@ export async function getVideos(req, res, next) {
       where: { uploadedById: req.user.id },
       orderBy: { createdAt: "desc" }
     });
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    return res.json(videos);
+    const formatted = videos.map(v => ({
+      ...v,
+      fileUrl: `${baseUrl}/uploads/${v.filePath}`
+    }));
+
+    res.json(formatted);
   } catch (err) {
-    return next(err);
+    next(err);
   }
 }
+
+   
