@@ -16,7 +16,7 @@ export async function addBookmark(req, res, next) {
       return res.status(400).json({ message: "Timestamp is required" });
     }
 
-    // ownership check (important)
+    // ownership 
     const video = await prisma.video.findUnique({
       where: { id: videoId },
       select: { uploadedById: true }
@@ -50,7 +50,7 @@ export async function getBookmarks(req, res, next) {
       return res.status(400).json({ message: "Invalid videoId" });
     }
 
-    // ownership check
+    // ownership 
     const video = await prisma.video.findUnique({
       where: { id: videoId },
       select: { uploadedById: true }
