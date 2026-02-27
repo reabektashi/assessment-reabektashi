@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
+import Layout from "../components/Layout";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -21,39 +22,44 @@ export default function Register() {
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: "40px auto", fontFamily: "Arial" }}>
-      <h2>Register</h2>
+    <Layout title="Create account" subtitle="Register to upload and annotate videos">
+      <div className="card" style={{ maxWidth: 420, margin: "0 auto" }}>
+        <div className="cardBody">
+          {err && <div className="alertError">{err}</div>}
 
-      <form onSubmit={onSubmit}>
-        <div style={{ marginBottom: 10 }}>
-          <label>Email</label>
-          <input
-            style={{ width: "100%", padding: 8 }}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
+            <div>
+              <label className="muted">Email</label>
+              <input
+                className="input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="muted">Password</label>
+              <input
+                className="input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <button className="btn btnPrimary" type="submit">
+              Register
+            </button>
+          </form>
+
+          <p className="muted" style={{ marginTop: 12 }}>
+            Already have an account?{" "}
+            <Link to="/login" className="navLink">
+              Login
+            </Link>
+          </p>
         </div>
-
-        <div style={{ marginBottom: 10 }}>
-          <label>Password</label>
-          <input
-            style={{ width: "100%", padding: 8 }}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
-        {err && <p style={{ color: "crimson" }}>{err}</p>}
-
-        <button style={{ padding: "8px 12px" }} type="submit">
-          Create account
-        </button>
-      </form>
-
-      <p style={{ marginTop: 12 }}>
-        Have an account? <Link to="/login">Login</Link>
-      </p>
-    </div>
+      </div>
+    </Layout>
   );
 }

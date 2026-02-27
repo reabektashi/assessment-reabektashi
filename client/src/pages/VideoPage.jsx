@@ -117,7 +117,85 @@ export default function VideoPage() {
       setErr(error?.response?.data?.message || "Failed to add annotation");
     }
   }
+async function deleteBookmark(bookmarkId) {
+  setErr("");
+  setMsg("");
+  try {
+    await api.delete(`/videos/${id}/bookmarks/${bookmarkId}`);
+    const bms = await api.get(`/videos/${id}/bookmarks`);
+    setBookmarks(bms.data);
+    setMsg("Bookmark deleted");
+  } catch (error) {
+    setErr(error?.response?.data?.message || "Failed to delete bookmark");
+  }
+}
 
+async function updateBookmark(bookmark) {
+  setErr("");
+  setMsg("");
+
+  const newTitle = prompt("New bookmark title:", bookmark.title);
+  if (newTitle === null) return; // cancelled
+  const newTimestampStr = prompt("New timestamp (seconds):", String(bookmark.timestamp));
+  if (newTimestampStr === null) return;
+
+  const newTimestamp = Number(newTimestampStr);
+  if (!newTitle.trim()) return setErr("Title required");
+  if (Number.isNaN(newTimestamp)) return setErr("Invalid timestamp");
+
+  try {
+    await api.patch(`/videos/${id}/bookmarks/${bookmark.id}`, {
+      title: newTitle.trim(),
+      timestamp: newTimestamp,
+    });
+    const bms = await api.get(`/videos/${id}/bookmarks`);
+    setBookmarks(bms.data);
+    setMsg("Bookmark updated");
+  } catch (error) {
+    setErr(error?.response?.data?.message || "Failed to update bookmark");
+  }
+}
+
+async function deleteAnnotation(annotationId) {
+  setErr("");
+  setMsg("");
+  try {
+    await api.delete(`/videos/${id}/annotations/${annotationId}`);
+    const anns = await api.get(`/videos/${id}/annotations`);
+    setAnnotations(anns.data);
+    setMsg("Annotation deleted");
+  } catch (error) {
+    setErr(error?.response?.data?.message || "Failed to delete annotation");
+  }
+}
+
+async function updateAnnotation(annotation) {
+  setErr("");
+  setMsg("");
+
+  const newDesc = prompt("New annotation description:", annotation.description);
+  if (newDesc === null) return;
+  const newTimestampStr = prompt("New timestamp (seconds):", String(annotation.timestamp));
+  if (newTimestampStr === null) return;
+
+  const newTimestamp = Number(newTimestampStr);
+  if (!newDesc.trim()) return setErr("Description required");
+  if (Number.isNaN(newTimestamp)) return setErr("Invalid timestamp");
+
+  try {
+    await api.patch(`/videos/${id}/annotations/${annotation.id}`, {
+      description: newDesc.trim(),
+      timestamp: newTimestamp,
+      // keep dataJson the same (optional)
+      dataJson: annotation.dataJson,
+    });
+    const anns = await api.get(`/videos/${id}/annotations`);
+    setAnnotations(anns.data);
+    setMsg("Annotation updated");
+  } catch (error) {
+    setErr(error?.response?.data?.message || "Failed to update annotation");
+  }
+}
   return (
     <div style={{ maxWidth: 1000, margin: "20px auto", fontFamily: "Arial" }}>
       <Link to="/">← Back</Link>
@@ -158,11 +236,16 @@ export default function VideoPage() {
 
               <ul>
                 {bookmarks.map((b) => (
-                  <li key={b.id}>
-                    <button onClick={() => seekTo(b.timestamp)}>
-                      {b.title} — {Number(b.timestamp).toFixed(1)}s
-                    </button>
-                  </li>
+                <li key={b.id} className="listItem">
+             <button className="linkBtn" onClick={() => seekTo(b.timestamp)}>
+               {b.title} — {Number(b.timestamp).toFixed(1)}s
+             </button>
+
+  <div className="actions">
+    <button className="btnSmall" onClick={() => updateBookmark(b)}>Edit</button>
+    <button className="btnSmall danger" onClick={() => deleteBookmark(b.id)}>Delete</button>
+  </div>
+</li>
                 ))}
               </ul>
             </div>
@@ -182,11 +265,16 @@ export default function VideoPage() {
 
               <ul>
                 {annotations.map((a) => (
-                  <li key={a.id}>
-                    <button onClick={() => seekTo(a.timestamp)}>
-                      {a.description} — {Number(a.timestamp).toFixed(1)}s
-                    </button>
-                  </li>
+             <li key={a.id} className="listItem">
+               <button className="linkBtn" onClick={() => seekTo(a.timestamp)}>
+                  {a.description} — {Number(a.timestamp).toFixed(1)}s
+              </button>
+
+  <div className="actions">
+    <button className="btnSmall" onClick={() => updateAnnotation(a)}>Edit</button>
+    <button className="btnSmall danger" onClick={() => deleteAnnotation(a.id)}>Delete</button>
+  </div>
+</li>
                 ))}
               </ul>
             </div>

@@ -1,28 +1,42 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
+import Layout from "../components/Layout";
 
 export default function Dashboard() {
   const [videos, setVideos] = useState([]);
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
+
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   async function loadVideos() {
-    const res = await api.get("/videos");
-    setVideos(res.data);
+    setErr("");
+    setLoading(true);
+    try {
+      const res = await api.get("/videos");
+      setVideos(res.data);
+    } catch (error) {
+      const status = error?.response?.status;
+      if (status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+      setErr(error?.response?.data?.message || "Failed to load videos");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    loadVideos().catch(() => setErr("Failed to load videos"));
+    loadVideos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  function logout() {
-    localStorage.removeItem("token");
-    navigate("/login");
-  }
 
   async function onUpload(e) {
     e.preventDefault();
@@ -30,10 +44,10 @@ export default function Dashboard() {
     setMsg("");
 
     if (!title.trim()) return setErr("Title is required");
-    if (!file) return setErr("Choose a file");
+    if (!file) return setErr("Choose a video file");
 
     const form = new FormData();
-    form.append("title", title);
+    form.append("title", title.trim());
     form.append("video", file);
 
     try {
@@ -42,7 +56,7 @@ export default function Dashboard() {
       });
       setTitle("");
       setFile(null);
-      setMsg("Uploaded!");
+      setMsg("Uploaded successfully");
       await loadVideos();
     } catch (error) {
       setErr(error?.response?.data?.message || "Upload failed");
@@ -50,48 +64,89 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "30px auto", fontFamily: "Arial" }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2>Dashboard</h2>
-        <div>
-          <Link to="/admin" style={{ marginRight: 12 }}>
-            Admin
-          </Link>
-          <button onClick={logout}>Logout</button>
+    <Layout title="Dashboard" subtitle="Upload and manage your videos">
+      {err && <div className="alertError">{err}</div>}
+      {msg && <div className="alertOk">{msg}</div>}
+
+      <div className="row">
+        {/* Upload card */}
+        <div className="card col">
+          <div className="cardHeader">
+            <div>
+              <div style={{ fontWeight: 800 }}>Upload video</div>
+              <div className="muted" style={{ fontSize: 13 }}>
+                Add a title and choose a file
+              </div>
+            </div>
+            <span className="badge">Private</span>
+          </div>
+
+          <div className="cardBody">
+            <form onSubmit={onUpload} style={{ display: "grid", gap: 10 }}>
+              <div>
+                <label className="muted">Title</label>
+                <input
+                  className="input"
+                  placeholder="e.g. CT Scan - Sample"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="muted">File</label>
+                <input
+                  className="input"
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
+              </div>
+
+              <button className="btn btnPrimary" type="submit">
+                Upload
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Videos card */}
+        <div className="card col">
+          <div className="cardHeader">
+            <div>
+              <div style={{ fontWeight: 800 }}>Your videos</div>
+              <div className="muted" style={{ fontSize: 13 }}>
+                Click one to open bookmarks & annotations
+              </div>
+            </div>
+            <span className="badge">{videos.length} total</span>
+          </div>
+
+          <div className="cardBody">
+            {loading ? (
+              <p className="muted">Loading…</p>
+            ) : videos.length === 0 ? (
+              <p className="muted">No videos yet. Upload one to get started.</p>
+            ) : (
+              <ul className="list">
+                {videos.map((v) => (
+                  <li key={v.id} className="listItem">
+                    <div style={{ display: "grid" }}>
+                      <span style={{ fontWeight: 700 }}>{v.title}</span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        ID: {v.id}
+                      </span>
+                    </div>
+
+                    <Link className="btn btnSmall" to={`/videos/${v.id}`}>
+                      Open
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
-
-      <h3>Upload video</h3>
-      <form onSubmit={onUpload} style={{ display: "flex", gap: 8 }}>
-        <input
-          style={{ flex: 1, padding: 8 }}
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          type="file"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        <button type="submit">Upload</button>
-      </form>
-
-      {err && <p style={{ color: "crimson" }}>{err}</p>}
-      {msg && <p style={{ color: "green" }}>{msg}</p>}
-
-      <h3 style={{ marginTop: 24 }}>Your videos</h3>
-      {videos.length === 0 ? (
-        <p>No videos yet.</p>
-      ) : (
-        <ul>
-          {videos.map((v) => (
-            <li key={v.id}>
-              <Link to={`/videos/${v.id}`}>{v.title}</Link>
-              <span style={{ color: "#666" }}> (id: {v.id})</span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    </Layout>
   );
 }
