@@ -6,12 +6,17 @@ import Layout from "../components/Layout";
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [err, setErr] = useState("");
   const navigate = useNavigate();
 
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
+
+    if (password.length < 6) return setErr("Password must be at least 6 characters.");
+    if (password !== confirm) return setErr("Passwords do not match.");
+
     try {
       const res = await api.post("/auth/register", { email, password });
       localStorage.setItem("token", res.data.token);
@@ -34,6 +39,8 @@ export default function Register() {
                 className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                required
               />
             </div>
 
@@ -44,11 +51,23 @@ export default function Register() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="muted">Confirm password</label>
+              <input
+                className="input"
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
               />
             </div>
 
             <button className="btn btnPrimary" type="submit">
-              Register
+              Create account
             </button>
           </form>
 

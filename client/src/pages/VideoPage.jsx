@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "../api";
+import Layout from "../components/Layout";
 
 export default function VideoPage() {
   const { id } = useParams();
