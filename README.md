@@ -8,6 +8,7 @@ VideoLab is a full-stack web application that allows authenticated users to uplo
 
 The purpose of this project is to demonstrate how users can interact with video content by marking important moments and visually annotating frames. The application focuses on authentication, file uploads, synchronized overlays, and a clean RESTful backend structure.
 
+
 ---
 
 ## How to Run the Project
@@ -116,6 +117,10 @@ http://localhost:4000
 
 The application uses JWT-based authentication.
 
+## Role-Based Access Design
+
+The dashboard is shared between roles to keep the user experience simple and consistent.  
+Admin-specific capabilities are available in a dedicated Admin view, which is protected by role-based authorization on the backend.
 Users can have two roles:
 
 **User**
