@@ -118,7 +118,7 @@ http://localhost:4000
 The application uses JWT-based authentication.
 
 ## Role-Based Access Design
-
+The dashboard is the main authenticated entry point to upload a video and open it to create bookmarks and annotations.
 The dashboard is shared between roles to keep the user experience simple and consistent.  
 Admin-specific capabilities are available in a dedicated Admin view, which is protected by role-based authorization on the backend.
 Users can have two roles:
