@@ -16,8 +16,8 @@ export async function uploadVideo(req, res, next) {
       data: {
         title,
         filePath: req.file.filename,
-        uploadedById: req.user.id
-      }
+        uploadedById: req.user.id,
+      },
     });
 
     return res.status(201).json(video);
@@ -28,15 +28,19 @@ export async function uploadVideo(req, res, next) {
 
 export async function getVideos(req, res, next) {
   try {
+    
     const videos = await prisma.video.findMany({
-      where: { uploadedById: req.user.id },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      include: {
+        uploadedBy: { select: { id: true, email: true, role: true } },
+      },
     });
+
     const baseUrl = `${req.protocol}://${req.get("host")}`;
 
-    const formatted = videos.map(v => ({
+    const formatted = videos.map((v) => ({
       ...v,
-      fileUrl: `${baseUrl}/uploads/${v.filePath}`
+      fileUrl: `${baseUrl}/uploads/${v.filePath}`,
     }));
 
     res.json(formatted);
@@ -44,5 +48,3 @@ export async function getVideos(req, res, next) {
     next(err);
   }
 }
-
-   

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api";
+import Layout from "../components/Layout";
 
 export default function Admin() {
   const [videos, setVideos] = useState([]);
@@ -24,40 +25,93 @@ export default function Admin() {
   }, []);
 
   return (
-    <div style={{ maxWidth: 1000, margin: "20px auto", fontFamily: "Arial" }}>
-      <Link to="/">← Back</Link>
-      <h2 style={{ marginTop: 10 }}>Admin</h2>
+    <Layout title="Admin" subtitle="View all videos, bookmarks, and annotations">
+      <Link to="/" className="navLink">← Back</Link>
 
-      {err && <p style={{ color: "crimson" }}>{err}</p>}
+      {err && <div className="alertError" style={{ marginTop: 12 }}>{err}</div>}
 
-      <h3>All Videos</h3>
-      <ul>
-        {videos.map((v) => (
-          <li key={v.id}>
-            #{v.id} — {v.title} — uploader: {v.uploadedBy?.email}
-          </li>
-        ))}
-      </ul>
+      <div className="row" style={{ marginTop: 14 }}>
+        <div className="card col">
+          <div className="cardHeader">
+            <div style={{ fontWeight: 800 }}>All Videos</div>
+            <span className="badge">{videos.length}</span>
+          </div>
+          <div className="cardBody">
+            {videos.length === 0 ? (
+              <p className="muted">No videos found.</p>
+            ) : (
+              <ul className="list">
+                {videos.map((v) => (
+                  <li key={v.id} className="listItem">
+                    <div style={{ display: "grid" }}>
+                      <strong>#{v.id} — {v.title}</strong>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        uploader: {v.uploadedBy?.email || "unknown"}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
 
-      <h3>All Bookmarks</h3>
-      <ul>
-        {items.bookmarks?.map((b) => (
-          <li key={b.id}>
-            video {b.video?.id} — {b.title} @ {b.timestamp}s — by{" "}
-            {b.createdBy?.email}
-          </li>
-        ))}
-      </ul>
+        <div className="card col">
+          <div className="cardHeader">
+            <div style={{ fontWeight: 800 }}>All Bookmarks</div>
+            <span className="badge">{items.bookmarks?.length || 0}</span>
+          </div>
+          <div className="cardBody">
+            {items.bookmarks?.length === 0 ? (
+              <p className="muted">No bookmarks found.</p>
+            ) : (
+              <ul className="list">
+                {items.bookmarks?.map((b) => (
+                  <li key={b.id} className="listItem">
+                    <div style={{ display: "grid" }}>
+                      <span>
+                        video {b.video?.id} — <strong>{b.title}</strong> @{" "}
+                        {Number(b.timestamp).toFixed(1)}s
+                      </span>
+                      <span className="muted" style={{ fontSize: 12 }}>
+                        by {b.createdBy?.email || "unknown"}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
 
-      <h3>All Annotations</h3>
-      <ul>
-        {items.annotations?.map((a) => (
-          <li key={a.id}>
-            video {a.video?.id} — {a.description} @ {a.timestamp}s — by{" "}
-            {a.createdBy?.email}
-          </li>
-        ))}
-      </ul>
-    </div>
+      <div className="card" style={{ marginTop: 14 }}>
+        <div className="cardHeader">
+          <div style={{ fontWeight: 800 }}>All Annotations</div>
+          <span className="badge">{items.annotations?.length || 0}</span>
+        </div>
+        <div className="cardBody">
+          {items.annotations?.length === 0 ? (
+            <p className="muted">No annotations found.</p>
+          ) : (
+            <ul className="list">
+              {items.annotations?.map((a) => (
+                <li key={a.id} className="listItem">
+                  <div style={{ display: "grid" }}>
+                    <span>
+                      video {a.video?.id} — <strong>{a.description}</strong> @{" "}
+                      {Number(a.timestamp).toFixed(1)}s
+                    </span>
+                    <span className="muted" style={{ fontSize: 12 }}>
+                      by {a.createdBy?.email || "unknown"}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </Layout>
   );
 }

@@ -1,15 +1,12 @@
 import { prisma } from "../utils/prisma.js";
 
-async function assertVideoOwner(videoId, userId) {
+async function assertVideoExists(videoId) {
   const video = await prisma.video.findUnique({
     where: { id: videoId },
-    select: { uploadedById: true },
+    select: { id: true },
   });
 
   if (!video) return { ok: false, status: 404, message: "Video not found" };
-  if (video.uploadedById !== userId)
-    return { ok: false, status: 403, message: "Forbidden" };
-
   return { ok: true };
 }
 
@@ -25,8 +22,8 @@ export async function addAnnotation(req, res, next) {
     if (!description) return res.status(400).json({ message: "Description is required" });
     if (dataJson === undefined) return res.status(400).json({ message: "dataJson is required" });
 
-    const ownership = await assertVideoOwner(videoId, req.user.id);
-    if (!ownership.ok) return res.status(ownership.status).json({ message: ownership.message });
+    const exists = await assertVideoExists(videoId);
+    if (!exists.ok) return res.status(exists.status).json({ message: exists.message });
 
     const annotation = await prisma.annotation.create({
       data: { videoId, timestamp, description, dataJson, createdById: req.user.id },
@@ -43,8 +40,8 @@ export async function getAnnotations(req, res, next) {
     const videoId = Number(req.params.videoId);
     if (Number.isNaN(videoId)) return res.status(400).json({ message: "Invalid videoId" });
 
-    const ownership = await assertVideoOwner(videoId, req.user.id);
-    if (!ownership.ok) return res.status(ownership.status).json({ message: ownership.message });
+    const exists = await assertVideoExists(videoId);
+    if (!exists.ok) return res.status(exists.status).json({ message: exists.message });
 
     const annotations = await prisma.annotation.findMany({
       where: { videoId },
@@ -73,16 +70,21 @@ export async function updateAnnotation(req, res, next) {
       return res.status(400).json({ message: "Nothing to update" });
     }
 
-    const ownership = await assertVideoOwner(videoId, req.user.id);
-    if (!ownership.ok) return res.status(ownership.status).json({ message: ownership.message });
+    const exists = await assertVideoExists(videoId);
+    if (!exists.ok) return res.status(exists.status).json({ message: exists.message });
 
     const existing = await prisma.annotation.findUnique({
       where: { id: annotationId },
-      select: { id: true, videoId: true },
+      select: { id: true, videoId: true, createdById: true, dataJson: true },
     });
     if (!existing) return res.status(404).json({ message: "Annotation not found" });
     if (existing.videoId !== videoId) {
       return res.status(400).json({ message: "Annotation does not belong to this video" });
+    }
+
+
+    if (existing.createdById !== req.user.id) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     const data = {};
@@ -91,7 +93,10 @@ export async function updateAnnotation(req, res, next) {
       if (Number.isNaN(timestamp)) return res.status(400).json({ message: "Invalid timestamp" });
       data.timestamp = timestamp;
     }
-    if (description !== undefined) data.description = description;
+    if (description !== undefined) {
+      if (!description) return res.status(400).json({ message: "Description is required" });
+      data.description = description;
+    }
     if (dataJson !== undefined) data.dataJson = dataJson;
 
     const updated = await prisma.annotation.update({
@@ -114,16 +119,21 @@ export async function deleteAnnotation(req, res, next) {
       return res.status(400).json({ message: "Invalid ids" });
     }
 
-    const ownership = await assertVideoOwner(videoId, req.user.id);
-    if (!ownership.ok) return res.status(ownership.status).json({ message: ownership.message });
+    const exists = await assertVideoExists(videoId);
+    if (!exists.ok) return res.status(exists.status).json({ message: exists.message });
 
     const existing = await prisma.annotation.findUnique({
       where: { id: annotationId },
-      select: { id: true, videoId: true },
+      select: { id: true, videoId: true, createdById: true },
     });
     if (!existing) return res.status(404).json({ message: "Annotation not found" });
     if (existing.videoId !== videoId) {
       return res.status(400).json({ message: "Annotation does not belong to this video" });
+    }
+
+
+    if (existing.createdById !== req.user.id) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     await prisma.annotation.delete({ where: { id: annotationId } });

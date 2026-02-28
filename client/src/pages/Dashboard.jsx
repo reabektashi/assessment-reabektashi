@@ -51,9 +51,11 @@ export default function Dashboard() {
     form.append("video", file);
 
     try {
+    
       await api.post("/videos", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       setTitle("");
       setFile(null);
       setMsg("Uploaded successfully");
@@ -78,7 +80,7 @@ export default function Dashboard() {
                 Add a title and choose a file
               </div>
             </div>
-            <span className="badge">Private</span>
+            <span className="badge">Auth-only</span>
           </div>
 
           <div className="cardBody">
@@ -90,6 +92,7 @@ export default function Dashboard() {
                   placeholder="e.g. CT Scan - Sample"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  required
                 />
               </div>
 
@@ -98,7 +101,9 @@ export default function Dashboard() {
                 <input
                   className="input"
                   type="file"
+                  accept="video/*"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  required
                 />
               </div>
 
@@ -113,7 +118,7 @@ export default function Dashboard() {
         <div className="card col">
           <div className="cardHeader">
             <div>
-              <div style={{ fontWeight: 800 }}>Your videos</div>
+              <div style={{ fontWeight: 800 }}>Videos</div>
               <div className="muted" style={{ fontSize: 13 }}>
                 Click one to open bookmarks & annotations
               </div>
